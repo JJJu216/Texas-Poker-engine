@@ -152,7 +152,15 @@ def simulate(hand,desk,cards):
 
     return players_win
 
+def display(cards):
+    rank_map={11:"J",12:"Q",13:"K",14:"A"}
+    rank_display=[]
+    for i,v in cards:
+        rank_display.append(rank_map.get(i,str(i))+v)
+    
+    return rank_display
 
+# ________________________________________________________________________
 
 deck=[i for i in range(2,15)]
 flower=['♠','♥','♣','♦']
@@ -173,30 +181,30 @@ while 2>num or num>10:
 s=start_game(num,cards)
 
 desk=[cards.pop() for i in range(3)]
-print(f"桌牌:{desk}")
+print(f"桌牌:{display(desk)}")
 
 win_rate=simulate(s,desk,cards)
 for i,v in win_rate.items():
     rate=v[1]
-    print(f"{i}|手牌:{s[i]},勝率:{rate:.2%}")
+    print(f"{i}|手牌:{display(s[i])},勝率:{rate:.2%}")
 print("-"*30)
 
 desk.append(cards.pop())
-print(f"桌牌:{desk}")
+print(f"桌牌:{display(desk)}")
 
 win_rate=simulate(s,desk,cards)
 for i,v in win_rate.items():
     rate=v[1]
-    print(f"{i}|手牌:{s[i]},勝率:{rate:.2%}")
+    print(f"{i}|手牌:{display(s[i])},勝率:{rate:.2%}")
 print("-"*30)
 
 desk.append(cards.pop())
-print(f"桌牌:{desk}")
+print(f"桌牌:{display(desk)}")
 
 win_rate=simulate(s,desk,cards)
 for i,v in win_rate.items():
     rate=v[1]
-    print(f"{i}|手牌:{s[i]},勝率:{rate:.2%}")
+    print(f"{i}|手牌:{display(s[i])},勝率:{rate:.2%}")
 
 
 # {每位玩家:最佳分點＋牌}
@@ -214,6 +222,9 @@ if len(high)>1:
     print(f"有{len(high)}人平手")
 
 for i in high:
-    print(f"贏家是{i},分點:{res[i][0]},牌型:{sorted(res[i][1])}")
+    # print(f"贏家是{i},分點:{res[i][0]},牌型:{display(sorted(res[i][1]))}")
+    print(f"贏家是{i},牌型:{display(sorted(res[i][1]))}")
+
+
 
 
