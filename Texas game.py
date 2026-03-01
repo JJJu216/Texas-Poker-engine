@@ -99,13 +99,13 @@ def hand_rank(hand):
 def best_five(all):
     five=combinations(all,5)
     best=None
-    card_type=[]
+    five_cards=[]
     for i in five :
         rank=hand_rank(i)
         if  best is None or best<=rank:
             best=rank
-            card_type=i
-    return best,card_type 
+            five_cards =i
+    return best,five_cards 
 # 分點＋牌型
 
 
@@ -117,7 +117,42 @@ def start_game(num,cards):
     return players
 
 
-def simulate(hand,desk,cards):
+# def simulate(hand,desk,cards):
+
+#     current_hand={}
+
+#     for i in range(len(hand)):
+#         current_hand[f"player{i+1}"]=hand[f"player{i+1}"]+desk
+
+#     num=5-len(desk)
+#     p=list(combinations(cards,num))
+
+#     length = math.comb(len(cards), num)
+
+#     players_win={}
+#     human=len(hand)
+
+#     for z in range(human):
+#         players_win[f"player{z+1}"]=[0,0]
+
+
+#     for k in range(length):
+#         res={}
+#         for j in range(len(hand)):
+#             seven=current_hand[f"player{j+1}"]+list(p[k])
+#             res[f"player{j+1}"]= best_five(seven)
+
+#         winner=max(res,key=lambda w : res[w][0])
+#         high=[i for i,v in res.items() if v[0]==res[winner][0]]
+#         for a in range(len(high)):
+#             players_win[high[a]][0]+=1 / len(high)
+
+#     for f in range(human):
+#         players_win[f"player{f+1}"][1]= players_win[f"player{f+1}"][0] / length
+
+#     return players_win
+
+def simulate(hand,desk,cards,interactions=10000):
 
     current_hand={}
 
@@ -125,7 +160,7 @@ def simulate(hand,desk,cards):
         current_hand[f"player{i+1}"]=hand[f"player{i+1}"]+desk
 
     num=5-len(desk)
-    p=list(combinations(cards,num))
+   
 
     length = math.comb(len(cards), num)
 
@@ -135,20 +170,39 @@ def simulate(hand,desk,cards):
     for z in range(human):
         players_win[f"player{z+1}"]=[0,0]
 
+    use_random=length>interactions
 
-    for k in range(length):
-        res={}
-        for j in range(len(hand)):
-            seven=current_hand[f"player{j+1}"]+list(p[k])
-            res[f"player{j+1}"]= best_five(seven)
+    if not use_random:
+        p=list(combinations(cards,num))
+        for k in range(length):
+            res={}
+            for j in range(len(hand)):
+                seven=current_hand[f"player{j+1}"]+list(p[k])
+                res[f"player{j+1}"]= best_five(seven)
 
-        winner=max(res,key=lambda w : res[w][0])
-        high=[i for i,v in res.items() if v[0]==res[winner][0]]
-        for a in range(len(high)):
-            players_win[high[a]][0]+=1 / len(high)
+            winner=max(res,key=lambda w : res[w][0])
+            high=[i for i,v in res.items() if v[0]==res[winner][0]]
+            for a in range(len(high)):
+                players_win[high[a]][0]+=1 / len(high)
 
-    for f in range(human):
-        players_win[f"player{f+1}"][1]= players_win[f"player{f+1}"][0] / length
+        for f in range(human):
+            players_win[f"player{f+1}"][1]= players_win[f"player{f+1}"][0] / length
+
+    else:
+
+        for k in range(interactions):  
+            res={}
+            for j in range(len(hand)):
+                seven=current_hand[f"player{j+1}"]+list(random.sample(cards,num))
+                res[f"player{j+1}"]= best_five(seven)
+
+            winner=max(res,key=lambda w : res[w][0])
+            high=[i for i,v in res.items() if v[0]==res[winner][0]]
+            for a in range(len(high)):
+                players_win[high[a]][0]+=1 / len(high)
+
+        for f in range(human):
+            players_win[f"player{f+1}"][1]= players_win[f"player{f+1}"][0] / interactions
 
     return players_win
 
@@ -159,6 +213,15 @@ def display(cards):
         rank_display.append(rank_map.get(i,str(i))+v)
     
     return rank_display
+
+def type(point_record):
+    
+    point_map={1:"單張",2:"一對",3:"兩對",4:"三條",5:"順子",6:"同花",7:"葫蘆",8:"四條",9:"同花順"}
+    card_type=[]
+    card_type=point_map.get(point_record[0])
+
+    return card_type
+
 
 # ________________________________________________________________________
 
@@ -179,6 +242,13 @@ while 2>num or num>10:
 # money=int(input("請輸入共同入場籌碼："))
 
 s=start_game(num,cards)
+desk=[]
+
+win_rate=simulate(s,desk,cards)
+for i,v in win_rate.items():
+    rate=v[1]
+    print(f"{i}|手牌：{display(s[i])},勝率：{rate:.2%}")
+print("-"*30)
 
 desk=[cards.pop() for i in range(3)]
 print(f"桌牌:{display(desk)}")
@@ -186,7 +256,9 @@ print(f"桌牌:{display(desk)}")
 win_rate=simulate(s,desk,cards)
 for i,v in win_rate.items():
     rate=v[1]
-    print(f"{i}|手牌:{display(s[i])},勝率:{rate:.2%}")
+    current_card=s[i]+desk
+    cards_type=type(best_five(current_card)[0])
+    print(f"{i}|手牌:{display(s[i])},最佳牌型：{cards_type},勝率:{rate:.2%}")
 print("-"*30)
 
 desk.append(cards.pop())
@@ -195,7 +267,9 @@ print(f"桌牌:{display(desk)}")
 win_rate=simulate(s,desk,cards)
 for i,v in win_rate.items():
     rate=v[1]
-    print(f"{i}|手牌:{display(s[i])},勝率:{rate:.2%}")
+    current_card=s[i]+desk
+    cards_type=type(best_five(current_card)[0])
+    print(f"{i}|手牌:{display(s[i])},最佳牌型：{cards_type},勝率:{rate:.2%}")
 print("-"*30)
 
 desk.append(cards.pop())
@@ -204,7 +278,9 @@ print(f"桌牌:{display(desk)}")
 win_rate=simulate(s,desk,cards)
 for i,v in win_rate.items():
     rate=v[1]
-    print(f"{i}|手牌:{display(s[i])},勝率:{rate:.2%}")
+    current_card=s[i]+desk
+    cards_type=type(best_five(current_card)[0])
+    print(f"{i}|手牌:{display(s[i])},最佳牌型：{cards_type},勝率:{rate:.2%}")
 
 
 # {每位玩家:最佳分點＋牌}
@@ -223,8 +299,5 @@ if len(high)>1:
 
 for i in high:
     # print(f"贏家是{i},分點:{res[i][0]},牌型:{display(sorted(res[i][1]))}")
-    print(f"贏家是{i},牌型:{display(sorted(res[i][1]))}")
-
-
-
+    print(f"贏家是{i},牌型:{type(res[i][0])},最佳五張牌:{display(sorted(res[i][1]))}")
 
