@@ -159,12 +159,17 @@ def star_chips(num):
 
 #     return players_win
 
-def simulate(hand,desk,cards,interactions=10000):
+def simulate(hand,desk,cards,quit_list,interactions=10000):
 
     current_hand={}
 
     for i in range(len(hand)):
         current_hand[f"player{i+1}"]=hand[f"player{i+1}"]+desk
+
+    for i in quit_list:
+        if i in current_hand:
+            del current_hand[i]
+
 
     num=5-len(desk)
    
@@ -172,10 +177,10 @@ def simulate(hand,desk,cards,interactions=10000):
     length = math.comb(len(cards), num)
 
     players_win={}
-    human=len(hand)
+    human=len(current_hand)
 
-    for z in range(human):
-        players_win[f"player{z+1}"]=[0,0]
+    for z in current_hand:
+        players_win[z]=[0,0]
 
     use_random=length>interactions
 
@@ -183,33 +188,33 @@ def simulate(hand,desk,cards,interactions=10000):
         p=list(combinations(cards,num))
         for k in range(length):
             res={}
-            for j in range(len(hand)):
-                seven=current_hand[f"player{j+1}"]+list(p[k])
-                res[f"player{j+1}"]= best_five(seven)
+            for j in current_hand:
+                seven=current_hand[j]+list(p[k])
+                res[j]= best_five(seven)
 
             winner=max(res,key=lambda w : res[w][0])
             high=[i for i,v in res.items() if v[0]==res[winner][0]]
-            for a in range(len(high)):
-                players_win[high[a]][0]+=1 / len(high)
+            for a in high:
+                players_win[a][0]+=(1 / len(high))
 
-        for f in range(human):
-            players_win[f"player{f+1}"][1]= players_win[f"player{f+1}"][0] / length
+        for f in current_hand:
+            players_win[f][1]= players_win[f][0] / length
 
     else:
 
         for k in range(interactions):  
             res={}
-            for j in range(len(hand)):
-                seven=current_hand[f"player{j+1}"]+list(random.sample(cards,num))
-                res[f"player{j+1}"]= best_five(seven)
+            for j in current_hand:
+                seven=current_hand[j]+list(random.sample(cards,num))
+                res[j]= best_five(seven)
 
             winner=max(res,key=lambda w : res[w][0])
             high=[i for i,v in res.items() if v[0]==res[winner][0]]
-            for a in range(len(high)):
-                players_win[high[a]][0]+=1 / len(high)
+            for a in high:
+                players_win[a][0]+=(1 / len(high))
 
-        for f in range(human):
-            players_win[f"player{f+1}"][1]= players_win[f"player{f+1}"][0] / interactions
+        for f in current_hand:
+            players_win[f][1]= players_win[f][0] / interactions
 
     return players_win
 
@@ -275,7 +280,8 @@ def chips(player_chips,total_pot,quit_list):
                             v[0]-=current_chips[i][0]
 
                         player_chips[name[0]][0]+=(pot+total_pot)
-                        # print(f"此局{name[0]}獲勝")
+                        print("-"*30)
+                        print(f"本輪結束：{name[0]} 獲勝")
                         return player_chips,False,name[0],pot,quit_list
     
 
@@ -311,7 +317,8 @@ def chips(player_chips,total_pot,quit_list):
                             v[0]-=current_chips[i][0]
 
                         player_chips[name[0]][0]+=(pot+total_pot)
-                        # print(f"此局{new_name[0]}獲勝")
+                        print("-"*30)
+                        print(f"本輪結束：{name[0]} 獲勝")
                         return player_chips,False,name[0],pot,quit_list
 
             else:
@@ -351,28 +358,33 @@ for i in range(num):
 s=start_game(num,cards)
 desk=[]
 
-win_rate=simulate(s,desk,cards)
+quit_list=[]
+
+win_rate=simulate(s,desk,cards,quit_list)
 for i,v in win_rate.items():
     rate=v[1]
     print(f"{i}|手牌：{display(s[i])},勝率：{rate:.2%}")
 print("-"*30)
 
-quit_list=[]
+
 total_pot=0
 # 第一次下注
 c,q,w,t,o=chips(player_chips,total_pot,quit_list)
-for i,v in c.items():
-    print(f"{i}目前籌碼：{v}")
-print("-"*30)
 total_pot+=t
-game_state=q
-quit_list=o
+
 
 if game_state==True:
+    print(f"目前牌池籌碼：{t}")
+    for i,v in c.items():
+        print(f"{i}目前籌碼：{v}")
+    print("-"*30)
+    game_state=q
+    quit_list=o
+
     desk=[cards.pop() for i in range(3)]
     print(f"桌牌:{display(desk)}")
 
-    win_rate=simulate(s,desk,cards)
+    win_rate=simulate(s,desk,cards,quit_list)
     for i,v in win_rate.items():
         rate=v[1]
         current_card=s[i]+desk
@@ -382,19 +394,22 @@ if game_state==True:
 
     # 第二次下注
     c,q,w,t,o=chips(player_chips,total_pot,quit_list)
-    for i,v in c.items():
-        print(f"{i}目前籌碼：{v}")
-    print("-"*30)
     total_pot+=t
+    
+    
     game_state=q
     quit_list=o
 
     if game_state==True:
+        print(f"目前牌池籌碼：{total_pot}")
+        for i,v in c.items():
+            print(f"{i}目前籌碼：{v}")
+        print("-"*30)
 
         desk.append(cards.pop())
         print(f"桌牌:{display(desk)}")
 
-        win_rate=simulate(s,desk,cards)
+        win_rate=simulate(s,desk,cards,quit_list)
         for i,v in win_rate.items():
             rate=v[1]
             current_card=s[i]+desk
@@ -404,19 +419,22 @@ if game_state==True:
 
         # 第三次下注
         c,q,w,t,o=chips(player_chips,total_pot,quit_list)
-        for i,v in c.items():
-            print(f"{i}目前籌碼：{v}")
-        print("-"*30)
         total_pot+=t
+        
+        
         game_state=q
         quit_list=o
 
         if game_state==True:
+            print(f"目前牌池籌碼：{total_pot}")
+            for i,v in c.items():
+                print(f"{i}目前籌碼：{v}")
+            print("-"*30)
 
             desk.append(cards.pop())
             print(f"桌牌:{display(desk)}")
 
-            win_rate=simulate(s,desk,cards)
+            win_rate=simulate(s,desk,cards,quit_list)
             for i,v in win_rate.items():
                 rate=v[1]
                 current_card=s[i]+desk
@@ -425,24 +443,32 @@ if game_state==True:
 
             # 第四次下注
             c,q,w,t,o=chips(player_chips,total_pot,quit_list)
-            for i,v in c.items():
-                print(f"{i}目前籌碼：{v}")
-            print("-"*30)
             total_pot+=t
+            
+            
             game_state=q
             quit_list=o
                 
             if game_state==True:
+                print(f"目前牌池籌碼：{total_pot}")
+                for i,v in c.items():
+                    print(f"{i}目前籌碼：{v}")
+                print("-"*20+"最終牌型比大小"+"-"*20)
             
                 # {每位玩家:最佳分點＋牌}
+                
+                remain_players=s
+                for i in quit_list:
+                    if i in remain_players:
+                        del remain_players[i]
                 res={}
-                for i in range(num):
-                    seven=s[f"player{i+1}"]+desk
-                    res[f"player{i+1}"]= best_five(seven)
+                for i in remain_players:
+                    seven=remain_players[i]+desk
+                    res[i]= best_five(seven)
 
                 winner=max(res,key=lambda p : res[p][0])
 
-                print("-"*30)
+                
 
                 high=[i for i,v in res.items() if v[0]==res[winner][0]]
                 if len(high)>1:
@@ -452,15 +478,25 @@ if game_state==True:
                     # print(f"贏家是{i},分點:{res[i][0]},牌型:{display(sorted(res[i][1]))}")
                     print(f"贏家是{i},牌型:{type(res[i][0])},最佳五張牌:{display(sorted(res[i][1]))}")
                     player_chips[i][0]+=(total_pot/len(high))
+                    
+                print("")
 
                 for i,v in player_chips.items():
                     print(f"{i}目前籌碼量：{v}")
 
             else:
-                print(f"遊戲結束:{w}獲勝")
+                for i,v in c.items():
+                    print(f"{i}目前籌碼：{v}")
+                print("-"*30)
         else:
-            print(f"遊戲結束:{w}獲勝")
+            for i,v in c.items():
+                print(f"{i}目前籌碼：{v}")
+            print("-"*30)
     else:
-        print(f"遊戲結束:{w}獲勝")
+        for i,v in c.items():
+            print(f"{i}目前籌碼：{v}")
+        print("-"*30)
 else:
-    print(f"遊戲結束:{w}獲勝")
+    for i,v in c.items():
+        print(f"{i}目前籌碼：{v}")
+    print("-"*30)
