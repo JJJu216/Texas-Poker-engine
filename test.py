@@ -11,11 +11,19 @@
 # print(cards)
 
 
-cards=[(12, '♣'), (8, '♦')]
+# cards=[(12, '♣'), (8, '♦')]
 
-rank_map={11:"J",12:"Q",13:"K",14:"A"}
-rank_display=[]
-for i,v in cards:
-    rank_display.append((rank_map.get(i,str(i))+v))
+# rank_map={11:"J",12:"Q",13:"K",14:"A"}
+# rank_display=[]
+# for i,v in cards:
+#     rank_display.append((rank_map.get(i,str(i))+v))
 
-print(rank_display)
+# print(rank_display)
+
+
+for n in range(1,82):
+    i= (n-1) // 9 +1
+    j= (n-1)%9 +1
+    print(f"{i}*{j}={i*j} ",end=" ")
+    if j>=9:
+        print()
