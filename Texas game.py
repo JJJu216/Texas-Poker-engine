@@ -237,112 +237,78 @@ def type(point_record):
 def chips(player_chips,total_pot,quit_list,dealer):
 
     num=len(player_chips)
-    current_chips={}
-    for i in player_chips:
-        current_chips[i]=[0]
+    current_chips={i:[0] for i in player_chips.keys()}
     
     name=list(current_chips.keys())
     
     pos=name.index(dealer)
-    name=name[pos:]+name[:pos]
-    name=name[2:]+name[:2]
+    star_pos=(pos+2)%len(name)
+    name=name[star_pos:]+name[:star_pos]
 
-    for i in name:
-        if i in quit_list:
-            name.remove(i)
+    name=[i for i in name if i not in quit_list]
 
     pot=0
     high_chips=0
     state=0
     quit_pos=0
+
     # while sum(1 for i in range(len(money)-1) if money[i]==money[i+1])!=(len(money)-1) or money.count(0)>0:
     while True:
         
-        
         if state==0:
-            for i in name:
+            for i in list(name):
                 action=int(input(f"{i} 請輸入數字1~3: 1:check,2:加碼,3:棄牌 :"))
                 if action==1:
-                    current_chips[i][0]+=0
+                    continue
                 elif action==2:
                     add_money=int(input("要加到多少？"))
-                    current_chips[i][0]+=add_money
+                    current_chips[i][0]+=(add_money-current_chips[i][0])
                     position=name.index(i)
                     name=name[position:]+name[:position]
                     # current_chips={k: current_chips[k]  for k in new_name }
                     high_chips=add_money
                     state=2
-                    pot+=add_money
+                    
                     break
 
                 elif action==3:
                     quit_list.append(i)
-                    quit_pos=name.index(i)
                     name.remove(i)
-                    state=1
-                    break
 
             else:
                 break
         
 
 
-        elif state==2:
-            for i in name[1:]:
-                action=int(input(f"{i} 請輸入數字1~3: 1:加碼,2:跟注,3:棄牌 :"))
-                
-                if action==1:
-                    add_money=int(input("要加到多少？"))
-                    current_chips[i][0]+=add_money
-                    position=name.index(i)
-                    name=name[position:]+name[:position]
-                    # current_chips={k: current_chips[k]  for k in name }
-                    high_chips=add_money
-                    state=2
-                    break
-
-                elif action==2:
-                    current_chips[i][0]+=(high_chips-current_chips[i][0])
-                    pot+=(high_chips-current_chips[i][0])
-                elif action==3:
-                    quit_list.append(i)
-                    quit_pos=name.index(i)
-                    name.remove(i)
-                    state=1
-                    break
-                    
-
-            else:
-                break
         else:
-            for i in name[quit_pos:]:
+            for i in list(name[1:]):
                 action=int(input(f"{i} 請輸入數字1~3: 1:加碼,2:跟注,3:棄牌 :"))
                 
                 if action==1:
                     add_money=int(input("要加到多少？"))
-                    current_chips[i][0]+=add_money
+                    current_chips[i][0]+=(add_money-current_chips[i][0])
                     position=name.index(i)
                     name=name[position:]+name[:position]
-                    # current_chips={k: current_chips[k]  for k in name }
+                    # current_chips={k: current_chips[k]  for k in new_name }
                     high_chips=add_money
                     state=2
+                    
                     break
 
                 elif action==2:
                     current_chips[i][0]+=(high_chips-current_chips[i][0])
-                    pot+=(high_chips-current_chips[i][0])
+                    
                 elif action==3:
                     quit_list.append(i)
-                    quit_pos=name.index(i)
                     name.remove(i)
-                    state=1
-                    break
+                    
+                    
             else:
                 break
 
 
 
-    if len(player_chips)-len(quit_list)==1:
+    if len(name)==1:
         pot=sum(i[0] for i in current_chips.values())
         for i,v in player_chips.items():
             v[0]-=current_chips[i][0]
@@ -363,26 +329,24 @@ def chips(player_chips,total_pot,quit_list,dealer):
 def first_chips(player_chips,total_pot,quit_list,dealer,sb,bb):
     
     num=len(player_chips)
-    current_chips={}
-    for i in player_chips:
-        current_chips[i]=[0]
+    current_chips={i:[0] for i in player_chips.keys()}
     
     name=list(current_chips.keys())
     
     
 
     pos=name.index(dealer)
-    name=name[pos:]+name[:pos]
-    
-    current_chips[name[1]]=[sb]
-    current_chips[name[2]]=[bb]
-    print(f"已自動放置[小盲]{name[1]}:{sb} ; [大盲]{name[2]}:{bb}籌碼")
-    
-    name=name[3:]+name[:3]
 
-    for i in name:
-        if i in quit_list:
-            name.remove(i)
+    star_pos=(pos+1)%len(name)
+    name=name[star_pos:]+name[:star_pos]
+    
+    current_chips[name[0]]=[sb]
+
+    current_chips[name[1]]=[bb]
+    print(f"已自動放置[小盲]{name[0]}:{sb} ; [大盲]{name[1]}:{bb} 籌碼")
+    
+    star_pos=(pos+3)%len(name)
+    name=name[star_pos:]+name[:star_pos]
 
     print("-"*15)
     pot=0
@@ -392,80 +356,61 @@ def first_chips(player_chips,total_pot,quit_list,dealer,sb,bb):
     while True:
         
         if state==0:
-            for i in name:
+            for i in list(name):
                 action=int(input(f"{i} 請輸入數字1~3: 1:加碼,2:跟注,3:棄牌 :"))
                 
                 if action==1:
                     add_money=int(input("要加到多少？"))
-                    current_chips[i][0]+=add_money
+                    current_chips[i][0]+=(add_money-current_chips[i][0])
                     position=name.index(i)
                     name=name[position:]+name[:position]
-                    # current_chips={k: current_chips[k]  for k in name }
+                    # current_chips={k: current_chips[k]  for k in new_name }
                     high_chips=add_money
-                    pot+=add_money
                     state=2
+                    
                     break
 
                 elif action==2:
                     current_chips[i][0]+=(high_chips-current_chips[i][0])
-                    pot+=(high_chips-current_chips[i][0])
+                    
                 elif action==3:
                     quit_list.append(i)
+                    name.remove(i)
                     
             else:
                 break
+        
 
-        elif state==2:
-            for i in name[1:]:
-                action=int(input(f"{i} 請輸入數字1~3: 1:加碼,2:跟注,3:棄牌 :"))
-                
-                if action==1:
-                    add_money=int(input("要加到多少？"))
-                    current_chips[i][0]+=add_money
-                    position=name.index(i)
-                    name=name[position:]+name[:position]
-                    # current_chips={k: current_chips[k]  for k in name }
-                    high_chips=add_money
-                    pot+=add_money
-                    break
-
-                elif action==2:
-                    current_chips[i][0]+=(high_chips-current_chips[i][0])
-                    pot+=(high_chips-current_chips[i][0])
-                elif action==3:
-                    quit_list.append(i)
-                    
-            else:
-                break
 
         else:
-            for i in name[quit_pos:]:
+            for i in list(name[1:]):
                 action=int(input(f"{i} 請輸入數字1~3: 1:加碼,2:跟注,3:棄牌 :"))
                 
                 if action==1:
                     add_money=int(input("要加到多少？"))
-                    current_chips[i][0]+=add_money
+                    current_chips[i][0]+=(add_money-current_chips[i][0])
                     position=name.index(i)
                     name=name[position:]+name[:position]
-                    # current_chips={k: current_chips[k]  for k in name }
+                    # current_chips={k: current_chips[k]  for k in new_name }
                     high_chips=add_money
+                    state=2
                     
                     break
 
                 elif action==2:
                     current_chips[i][0]+=(high_chips-current_chips[i][0])
-                    pot+=(high_chips-current_chips[i][0])
+                    
                 elif action==3:
                     quit_list.append(i)
-                    quit_pos=name.index(i)
                     name.remove(i)
-                    state=1
-                    break
+                    
+                    
             else:
                 break
 
 
-    if len(player_chips)-len(quit_list)==1:
+
+    if len(name)==1:
         pot=sum(i[0] for i in current_chips.values())
         for i,v in player_chips.items():
             v[0]-=current_chips[i][0]
@@ -474,13 +419,14 @@ def first_chips(player_chips,total_pot,quit_list,dealer,sb,bb):
         print("-"*30)
         print(f"本輪結束：{name[0]} 獲勝")
         return player_chips,False,name[0],pot,quit_list
+    else:
 
-    for i,v in player_chips.items():
+        for i,v in player_chips.items():
             v[0]-=current_chips[i][0]
 
-    pot=sum(i[0] for i in current_chips.values())
+        pot=sum(i[0] for i in current_chips.values())
 
-    return player_chips,True,name[0],pot,quit_list
+        return player_chips,True,name[0],pot,quit_list
 
 # ________________________________________________________________________
 
@@ -529,10 +475,11 @@ c,q,w,t,o=first_chips(player_chips,total_pot,quit_list,dealer,sb,bb)
 total_pot+=t
 
 game_state=q
+print(f"測試o有什麼{o}")
 quit_list=o
 
 if game_state==True:
-    print(f"目前牌池籌碼：{t}")
+    print(f"目前牌池籌碼：{total_pot}")
     for i,v in c.items():
         print(f"{i}目前籌碼：{v}")
     print("-"*30)
@@ -552,9 +499,8 @@ if game_state==True:
     print("第二輪下注")
     c,q,w,t,o=chips(player_chips,total_pot,quit_list,dealer)
     total_pot+=t
-    
-    
     game_state=q
+    print(f"測試o有什麼{o}")
     quit_list=o
 
     if game_state==True:
@@ -578,7 +524,8 @@ if game_state==True:
         c,q,w,t,o=chips(player_chips,total_pot,quit_list,dealer)
         total_pot+=t
         game_state=q
-        quit_list=o
+        print(f"測試o有什麼{o}")
+        quit_list=o 
 
         if game_state==True:
             print(f"目前牌池籌碼：{total_pot}")
@@ -603,6 +550,7 @@ if game_state==True:
             
             
             game_state=q
+            print(f"測試o有什麼{o}")
             quit_list=o
                 
             if game_state==True:
